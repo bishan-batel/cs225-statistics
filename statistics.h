@@ -37,11 +37,9 @@ public:
 
   ContainerType Histogram(const size_t bin_count, const int begin, const int end) const;
 
-  template<typename... Args>
-  void DrawHistogramH(Args...) {}
+  void DrawHistogramH(const size_t bin_count, const int begin, const int end);
 
-  template<typename... Args>
-  void DrawHistogramV(Args...) {}
+  void DrawHistogramV(const size_t bin_count, const int begin, const int end);
 
   std::map<int, int> OccuresMoreThan(int min) const;
 };

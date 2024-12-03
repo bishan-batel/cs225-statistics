@@ -97,9 +97,9 @@ namespace {
         return;
       }
 
-      const int index = (int) ((float) bin_count * (v - begin) / (end));
+      const int index = static_cast<int>(static_cast<float>(bin_count) * (v - begin) / (end));
 
-      if ((size_t) index < bin_count) {
+      if (static_cast<size_t>(index) < bin_count) {
         values[index]++;
       }
     }
@@ -117,4 +117,17 @@ Statistics::ContainerType Statistics::Histogram(const size_t bin_count, const in
   std::for_each(data.begin(), data.end(), HistogramBucket(values, bin_count, begin, end));
 
   return values;
+}
+
+void Statistics::DrawHistogramH(const size_t bin_count, const int begin, const int end) {
+  std::vector<int> histogram = Histogram(bin_count, begin, end);
+
+  for (size_t i = 0; i < histogram.size(); i++) {
+    std::cout << std::setfill('*') << std::setw(histogram[i]) << "";
+    std::cout << std::endl;
+  }
+}
+
+void Statistics::DrawHistogramV(const size_t bin_count, const int begin, const int end) {
+  Histogram(bin_count, begin, end);
 }
