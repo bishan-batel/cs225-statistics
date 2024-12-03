@@ -1,9 +1,12 @@
 #include "statistics.h"
-#include <cmath> //sqrt
-#include <iomanip> //setfill setw
-#include <iostream> //cout
-#include <iterator> //ostream_iterator, back_inserter
-#include <numeric> //accumulate
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
+#include <numeric>
 
 Statistics::Statistics() : data() {}
 
@@ -17,76 +20,101 @@ std::istream &operator>>(std::istream &in, Statistics &stat) {
   return in;
 }
 
-int Statistics::Average() const {
-  const size_t length = Size();
-  int sum = 0;
-
-  for (size_t i = 0; i < length; i++) {
-    sum += data[i];
-  }
-
-  return sum / length;
-}
+float Statistics::Average() const { return std::accumulate(data.begin(), data.end(), 0.f) / (float) Size(); }
 
 size_t Statistics::Size() const { return data.size(); }
 
 int Statistics::Minimum() const {
-  const size_t length = Size();
-
-  if (length == 0) {
+  if (Size() == 0) {
     return 0;
   }
 
-  int min = data[1];
-  for (size_t i = 0; i < length; i++) {
-    min = std::min(min, data[i]);
-  }
-
-  return min;
+  return std::accumulate(data.begin(), data.end(), data[0], std::min<int>);
 }
 
 int Statistics::Maximum() const {
-  const size_t length = Size();
-
-  if (length == 0) {
+  if (Size() == 0) {
     return 0;
   }
 
-  int max = data[1];
-  for (size_t i = 0; i < length; i++) {
-    max = std::max(max, data[i]);
-  }
-
-  return max;
+  return std::accumulate(data.begin(), data.end(), data[0], std::max<int>);
 }
+
+namespace {
+  struct DiffSquared {
+    const float mean;
+
+    DiffSquared(const float value) : mean(value) {}
+
+    float operator()(const float sum, const int x) const { return sum + (x - mean) * (x - mean); }
+  };
+} // namespace
 
 float Statistics::Deviation() const {
-  /* formula Deviation( x_1, ... , x_n ) = sqrt ( 1/n * sum ( x_i -a )^2 ) */
-  const size_t length = Size();
-  const int avg = Average();
-
-  int sum = 0;
-  for (size_t i = 0; i < length; i++) {
-    sum += (data[i] - avg) * (data[i] - avg);
-  }
-
-  return std::sqrt(sum * 1.f / (length));
+  return std::sqrt(std::accumulate(data.begin(), data.end(), 0.f, DiffSquared(Average())) / Size());
 }
 
-std::map<int, int> Statistics::OccuresMoreThan(const int min) const {
-  std::map<int, int> final_output, tracker;
+namespace {
+  struct OccurenceInc {
+    std::map<int, int> &occurences;
+    std::map<int, int> unfiltered_occurences;
+    int min;
 
-  const size_t length = Size();
+    OccurenceInc(std::map<int, int> &occurences, const int min) :
+        occurences(occurences), unfiltered_occurences(), min(min) {}
 
-  for (size_t i = 0; i < length; i++) {
-    const int value = data[i];
+    void operator()(const int val) {
+      if (unfiltered_occurences.find(val) == unfiltered_occurences.end()) {
+        unfiltered_occurences.insert(std::make_pair(val, 0));
+      }
 
-    tracker[value]++;
-
-    if (tracker[value] >= min) {
-      final_output[value] = tracker[value];
+      if (++unfiltered_occurences[val] > min) {
+        occurences[val] = unfiltered_occurences[val];
+      }
     }
+  };
+} // namespace
+
+std::map<int, int> Statistics::OccuresMoreThan(const int min) const {
+  std::map<int, int> occurences;
+
+  std::for_each(data.begin(), data.end(), OccurenceInc(occurences, min));
+
+  return occurences;
+}
+
+namespace {
+  struct HistogramBucket {
+    const size_t bin_count;
+    const int begin, end;
+    std::vector<int> &values;
+
+    HistogramBucket(std::vector<int> &values, const size_t bin_count, const int begin, const int end) :
+        bin_count(bin_count), begin(begin), end(end), values(values) {}
+
+    void operator()(const int v) const {
+      if (v < begin or v >= end) {
+        return;
+      }
+
+      const int index = (int) ((float) bin_count * (v - begin) / (end));
+
+      if ((size_t) index < bin_count) {
+        values[index]++;
+      }
+    }
+  };
+} // namespace
+
+Statistics::ContainerType Statistics::Histogram(const size_t bin_count, const int begin, const int end) const {
+  std::vector<int> values;
+
+  values.reserve(bin_count);
+  for (size_t i = 0; i < bin_count; i++) {
+    values.push_back(0);
   }
 
-  return final_output;
+  std::for_each(data.begin(), data.end(), HistogramBucket(values, bin_count, begin, end));
+
+  return values;
 }

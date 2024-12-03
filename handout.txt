@@ -30,6 +30,7 @@ More interesting stuff:
                       noise from the data.
     Histogram       - data structure representing data by splitting the range of data into 
                       smaller intervals (bins) and counting samples for each of the bins.
+   ;
                       For example data: 1 1 2 2 2 4 4 4 4 5
                       split the range into intervals: [1,3), [3,5), [5,7)
                       count values                     5      4      1 
