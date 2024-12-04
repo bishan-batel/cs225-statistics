@@ -150,7 +150,7 @@ namespace {
 
     DrawHistogramChar(const size_t height) : height(height) {}
 
-    void operator()(const size_t i) { std::cout << (i >= height ? '*' : ' '); }
+    void operator()(const size_t freq) { std::cout << (freq >= height ? '*' : ' '); }
   };
 
   struct DrawHistogramLine {
