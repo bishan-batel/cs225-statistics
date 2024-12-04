@@ -20,9 +20,7 @@ std::istream &operator>>(std::istream &in, Statistics &stat) {
   return in;
 }
 
-float Statistics::Average() const {
-  return std::accumulate(data.begin(), data.end(), 0.f) / static_cast<float>(Size());
-}
+float Statistics::Average() const { return std::accumulate(data.begin(), data.end(), 0.f) / (float) Size(); }
 
 size_t Statistics::Size() const { return data.size(); }
 
@@ -137,30 +135,14 @@ void Statistics::DrawHistogramH(const size_t bin_count, const int begin, const i
 }
 
 namespace {
-  struct Range {
-    size_t i;
-
-    Range() : i(0) {}
-
-    int operator()() { return i++; }
-  };
-
-  struct DrawHistogramChar {
-    const size_t height;
-
-    DrawHistogramChar(const size_t height) : height(height) {}
-
-    void operator()(const size_t i) { std::cout << (i >= height ? '*' : ' '); }
-  };
-
-  struct DrawHistogramLine {
+  struct DrawHistogramV {
     const size_t height;
     std::vector<int> &histogram;
 
-    DrawHistogramLine(std::vector<int> &histogram, const size_t height) : height(height), histogram(histogram) {}
+    DrawHistogramV(std::vector<int> &histogram, const size_t height) : height(height), histogram(histogram) {}
 
-    void operator()(const size_t i) {
-      std::for_each(histogram.begin(), histogram.end(), DrawHistogramChar(height - i));
+    void operator()(const int x) {
+      std::cout << std::setfill('*') << std::setw(x) << "";
       std::cout << std::endl;
     }
   };
@@ -173,9 +155,6 @@ void Statistics::DrawHistogramV(const size_t bin_count, const int begin, const i
     return;
   }
 
-  const int height = std::accumulate(histogram.begin(), histogram.end(), histogram[0], std::max<int>);
-
-  std::vector<size_t> range(height);
-  std::generate(range.begin(), range.end(), Range());
-  std::for_each(range.begin(), range.end(), ::DrawHistogramLine(histogram, height));
+  const int height = std::accumulate(data.begin(), data.end(), histogram[0], std::max<int>);
+  std::for_each(histogram.begin(), histogram.end(), ::DrawHistogramV(height));
 }
