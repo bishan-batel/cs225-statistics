@@ -7,6 +7,10 @@
 #include <ostream>
 #include <vector>
 
+/**
+ * @class Statistics
+ * Class for handling integer statistic samples
+ */
 class Statistics {
 private:
   typedef std::vector<int> ContainerType;
@@ -18,29 +22,67 @@ public:
   template<typename T>
   Statistics(T const *b, T const *e);
 
+  /**
+   * @brief Emits statistic values to stream
+   */
   friend std::ostream &operator<<(std::ostream &out, Statistics const &stat);
 
+  /**
+   * @brief Reads statistic data in from stream
+   */
   friend std::istream &operator>>(std::istream &in, Statistics &stat);
 
+  /**
+   * @brief Returns the average of all samples
+   */
   float Average() const;
 
+  /**
+   * @brief Returns the number of samples
+   */
   size_t Size() const;
 
+  /**
+   * @brief Returns the smallest sample
+   */
   int Minimum() const;
 
+  /**
+   * @brief Returns the largest sample
+   */
   int Maximum() const;
 
+  /**
+   * @brief Returns the standard deviation of all samples
+   */
   float Deviation() const;
 
+  /**
+   * @brief Removes any sample that matches the predicate
+   */
   template<typename T>
   void RemoveIf(const T &predicate);
 
+  /**
+   * @brief Creates a vector of frequency data for each sample in the requested range,
+   */
   ContainerType Histogram(const size_t bin_count, const int begin, const int end) const;
 
-  void DrawHistogramH(const size_t bin_count, const int begin, const int end);
+  /**
+   * @brief Prints out the histogram horizontally
+   */
+  void DrawHistogramH(const size_t bin_count, const int begin, const int end) const;
 
-  void DrawHistogramV(const size_t bin_count, const int begin, const int end);
+  /**
+   * @brief Prints out the histogram vertically
+   */
+  void DrawHistogramV(const size_t bin_count, const int begin, const int end) const;
 
+  /**
+   * @brief Returns a map where each key is a sample value and the associated
+   * value is its frequency in the set, this will only record values that have a
+   * frequency of at least 'min'
+   */
   std::map<int, int> OccuresMoreThan(int min) const;
 };
 

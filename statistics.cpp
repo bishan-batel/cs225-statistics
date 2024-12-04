@@ -31,7 +31,7 @@ int Statistics::Minimum() const {
     return 0;
   }
 
-  return std::accumulate(data.begin(), data.end(), data[0], std::min<int>);
+  return *std::min_element(data.begin(), data.end());
 }
 
 int Statistics::Maximum() const {
@@ -39,10 +39,14 @@ int Statistics::Maximum() const {
     return 0;
   }
 
-  return std::accumulate(data.begin(), data.end(), data[0], std::max<int>);
+  return *std::max_element(data.begin(), data.end());
 }
 
 namespace {
+  /**
+   * @brief Functor for folding an iterable set to the sum of squared differences
+   * of a fixed value
+   */
   struct DiffSquared {
     const float mean;
 
@@ -57,6 +61,11 @@ float Statistics::Deviation() const {
 }
 
 namespace {
+  /**
+   * @class OccurenceInc
+   * @brief Functor to record frequency information, discarding any that do not
+   * match a constant threshold
+   */
   struct OccurenceInc {
     std::map<int, int> &occurences;
     std::map<int, int> unfiltered_occurences;
@@ -86,6 +95,10 @@ std::map<int, int> Statistics::OccuresMoreThan(const int min) const {
 }
 
 namespace {
+  /**
+   * @class HistogramBucket
+   * @brief Functor for recording histogram data  in a given range with a number of buckets
+   */
   struct HistogramBucket {
     const size_t bin_count;
     const int begin, end;
@@ -122,6 +135,11 @@ Statistics::ContainerType Statistics::Histogram(const size_t bin_count, const in
 }
 
 namespace {
+  /**
+   * @class DrawHistogramH
+   * @brief Functor printing a single line of a vertical histogram
+   *
+   */
   struct DrawHistogramH {
     void operator()(const int x) const {
       std::cout << std::setfill('*') << std::setw(x) << "";
@@ -130,13 +148,17 @@ namespace {
   };
 } // namespace
 
-void Statistics::DrawHistogramH(const size_t bin_count, const int begin, const int end) {
+void Statistics::DrawHistogramH(const size_t bin_count, const int begin, const int end) const {
   std::vector<int> histogram = Histogram(bin_count, begin, end);
 
   std::for_each(histogram.begin(), histogram.end(), ::DrawHistogramH());
 }
 
 namespace {
+  /**
+   * @class Range
+   * @brief Functor for generating an integer range
+   */
   struct Range {
     size_t i;
 
@@ -145,35 +167,45 @@ namespace {
     int operator()() { return i++; }
   };
 
+  /**
+   * @class DrawHistogramChar
+   * @brief
+   *
+   */
   struct DrawHistogramChar {
     const size_t height;
 
     DrawHistogramChar(const size_t height) : height(height) {}
 
-    void operator()(const size_t freq) { std::cout << (freq >= height ? '*' : ' '); }
+    void operator()(const size_t freq) const { std::cout << (freq >= height ? '*' : ' '); }
   };
 
+  /**
+   * @class DrawHistogramLine
+   * @brief Functor for drawing a line of a vertical histogram
+   *
+   */
   struct DrawHistogramLine {
     const size_t height;
     std::vector<int> &histogram;
 
     DrawHistogramLine(std::vector<int> &histogram, const size_t height) : height(height), histogram(histogram) {}
 
-    void operator()(const size_t i) {
+    void operator()(const size_t i) const {
       std::for_each(histogram.begin(), histogram.end(), DrawHistogramChar(height - i));
       std::cout << std::endl;
     }
   };
 } // namespace
 
-void Statistics::DrawHistogramV(const size_t bin_count, const int begin, const int end) {
+void Statistics::DrawHistogramV(const size_t bin_count, const int begin, const int end) const {
   std::vector<int> histogram = Histogram(bin_count, begin, end);
 
   if (histogram.empty()) {
     return;
   }
 
-  const int height = std::accumulate(histogram.begin(), histogram.end(), histogram[0], std::max<int>);
+  const int height = *std::max_element(histogram.begin(), histogram.end());
 
   std::vector<size_t> range(height);
   std::generate(range.begin(), range.end(), Range());

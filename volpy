@@ -57,6 +57,8 @@ if len(PROJECT_CONFIG["makeTargets"]) == 0:
 
 for i in PROJECT_CONFIG["makeTargets"]:
     print(f"Makefile Action: {i}")
+
+    print(f"$ make {i}")
     if os.system(f"make {i}") != 0:
         print(f"Failed to compile Makefile: {i}")
         sys.exit(1)
@@ -67,6 +69,7 @@ test_count = PROJECT_CONFIG["testCount"]
 count = get_test_count() if test_count == "autodetect" else test_count
 
 for i in range(count):
+    print(f"$ make {i}")
     if os.system(f"make {i}") != 0:
         failed.append(f"{i}")
 
@@ -75,6 +78,8 @@ if len(failed) == 0:
     for i in range(count):
         if not any(map(lambda line: f"mem{i}" in line, MAKE_FILE_SOURCE)):
             continue
+
+        print(f"$ make mem{i}")
         if os.system(f"make mem{i}") != 0:
             failed.append(f"mem{i}")
 
@@ -91,8 +96,11 @@ for f in os.listdir("."):
         continue
 
     if any(map(lambda x: f.endswith(x), PROJECT_CONFIG["sourceFiles"])):
-        cmd += f" {file}"
+        cmd += f" {f}"
 cmd += "\""
+
+print("$ ", end="")
+print(cmd)
 os.system(cmd)
 
 print(f"Zipped Submission to {PROJECT_CONFIG["submissionName"]}.zip")
